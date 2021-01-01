@@ -20,7 +20,8 @@ from encoding.datasets import get_segmentation_dataset
 from encoding.models import get_segmentation_model
 
 from .option import Options
-
+torch.backends.cudnn.benchmark=True
+torch.backends.cudnn.deterministic=True
 torch_ver = torch.__version__[:3]
 if torch_ver == '0.3':
     from torch.autograd import Variable
@@ -53,7 +54,7 @@ class Trainer():
                                        lateral = args.lateral, jpu = args.jpu, aux = args.aux,
                                        se_loss = args.se_loss, norm_layer = SyncBatchNorm,
                                        base_size = args.base_size, crop_size = args.crop_size)
-        print(model)
+        # print(model)
         # optimizer using different LR
         params_list = [{'params': model.pretrained.parameters(), 'lr': args.lr},]
         if hasattr(model, 'jpu') and model.jpu:
