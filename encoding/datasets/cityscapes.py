@@ -7,7 +7,7 @@
 import os
 import random
 import numpy as np
-
+import torchvision.transforms as transforms
 import torch
 
 from tqdm import tqdm
@@ -17,7 +17,7 @@ from .base import BaseDataset
 
 class CitySegmentation(BaseDataset):
     NUM_CLASS = 19
-    def __init__(self, root=os.path.expanduser('~/.encoding/data'), split='train',
+    def __init__(self, root=os.path.expanduser('./datasets/cityscapes'), split='train',
                  mode=None, transform=None, target_transform=None, **kwargs):
         super(CitySegmentation, self).__init__(
             root, split, mode, transform, target_transform, **kwargs)
@@ -35,7 +35,11 @@ class CitySegmentation(BaseDataset):
                               5,  -1,  6,  7,  8,  9,
                               10, 11, 12, 13, 14, 15,
                               -1, -1, 16, 17, 18])
-        self._mapping = np.array(range(-1, len(self._key)-1)).astype('int32')
+        self._mapping = np.array(range(-1, len(self._key)-1)).astype('int32')    
+        
+        self.colorjitter = transforms.ColorJitter(brightness=0.1, contrast=0, saturation=0, hue=0)    
+
+        
 
     def _class_to_index(self, mask):
         # assert the values
@@ -100,10 +104,10 @@ class CitySegmentation(BaseDataset):
             ow = int(1.0 * w * oh / h)
         img = img.resize((ow, oh), Image.BILINEAR)
         mask = mask.resize((ow, oh), Image.NEAREST)
-        # random rotate -10~10, mask using NN rotate
-        deg = random.uniform(-10, 10)
-        img = img.rotate(deg, resample=Image.BILINEAR)
-        mask = mask.rotate(deg, resample=Image.NEAREST)
+        # # random rotate -10~10, mask using NN rotate
+        # deg = random.uniform(-10, 10)
+        # img = img.rotate(deg, resample=Image.BILINEAR)
+        # mask = mask.rotate(deg, resample=Image.NEAREST)
         # pad crop
         if short_size < crop_size:
             padh = crop_size - oh if oh < crop_size else 0
@@ -116,10 +120,10 @@ class CitySegmentation(BaseDataset):
         y1 = random.randint(0, h - crop_size)
         img = img.crop((x1, y1, x1+crop_size, y1+crop_size))
         mask = mask.crop((x1, y1, x1+crop_size, y1+crop_size))
-        # gaussian blur as in PSP
-        if random.random() < 0.5:
-            img = img.filter(ImageFilter.GaussianBlur(
-                radius=random.random()))
+        # # gaussian blur as in PSP
+        # if random.random() < 0.5:
+        #     img = img.filter(ImageFilter.GaussianBlur(
+        #         radius=random.random()))
         # final transform
         return img, self._mask_transform(mask)
 
