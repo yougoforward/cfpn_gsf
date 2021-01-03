@@ -42,10 +42,12 @@ class cfpn_gsfHead(nn.Module):
         inter_channels = in_channels // 4
 
         self.gap = nn.Sequential(nn.AdaptiveAvgPool2d(1),
-                            nn.Conv2d(in_channels, inter_channels//2, 1, bias=False),
-                            norm_layer(inter_channels//2),
+                            nn.Conv2d(in_channels, inter_channels, 1, bias=False),
+                            norm_layer(inter_channels),
                             nn.ReLU(True))
         self.se = nn.Sequential(
+            nn.Conv2d(in_channels, inter_channels//2, 1, bias=False),
+                            nn.ReLU(True),
                             nn.Conv2d(inter_channels//2, inter_channels, 1, bias=True),
                             nn.Sigmoid())
         self.gff = PAM_Module(in_dim=inter_channels, key_dim=inter_channels//8,value_dim=inter_channels,out_dim=inter_channels,norm_layer=norm_layer)
@@ -67,6 +69,12 @@ class cfpn_gsfHead(nn.Module):
                                    norm_layer(inter_channels),
                                    nn.ReLU(),
                                    )
+        self.project_gp = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 1, padding=0, dilation=1, bias=False),
+                                   norm_layer(inter_channels),
+                                   nn.ReLU(),
+                                   )
+        
+        
     def forward(self, c1,c2,c3,c4):
         _,_, h,w = c2.size()
         cat4, p4_1, p4_8=self.context4(c4)
@@ -89,7 +97,7 @@ class cfpn_gsfHead(nn.Module):
         gp = self.gap(c4)    
         # se
         se = self.se(gp)
-        out = out + se*out
+        out = out + se*out +self.project_gp(gp)
         out = self.gff(out)
         #
         # out = torch.cat([out, gp.expand_as(out)], dim=1)
