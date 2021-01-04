@@ -69,10 +69,9 @@ class cfpn_gsfHead(nn.Module):
                                    norm_layer(inter_channels),
                                    nn.ReLU(),
                                    )
-        self.project_gp = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 1, padding=0, dilation=1, bias=False),
-                                   norm_layer(inter_channels),
-                                   nn.ReLU(),
+        self.project_gp = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 1, padding=0, dilation=1, bias=False)
                                    )
+        self.relu = nn.ReLU()
         
         
     def forward(self, c1,c2,c3,c4):
@@ -97,7 +96,7 @@ class cfpn_gsfHead(nn.Module):
         gp = self.gap(c4)    
         # se
         se = self.se(gp)
-        out = out + se*out +self.project_gp(gp)
+        out = self.relu(out + se*out +self.project_gp(gp))
         out = self.gff(out)
         #
         # out = torch.cat([out, gp.expand_as(out)], dim=1)
