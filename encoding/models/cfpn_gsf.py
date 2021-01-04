@@ -70,7 +70,6 @@ class cfpn_gsfHead(nn.Module):
                                    nn.ReLU(),
                                    )
         self.project_gp = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 1, padding=0, dilation=1, bias=False),
-                                        norm_layer(inter_channels),
                                    )
         self.relu = nn.ReLU()
         
