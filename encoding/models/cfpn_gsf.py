@@ -96,7 +96,9 @@ class cfpn_gsfHead(nn.Module):
         gp = self.gap(c4)    
         # se
         se = self.se(gp)
-        out = self.relu(out + se*out +self.project_gp(gp))
+        out = out + gp
+        
+        out = out + se*out
         out = self.gff(out)
         #
         # out = torch.cat([out, gp.expand_as(out)], dim=1)
