@@ -46,9 +46,7 @@ class cfpn_gsf2Head(nn.Module):
                             norm_layer(inter_channels),
                             nn.ReLU(True))
         self.se = nn.Sequential(
-            nn.Conv2d(inter_channels, inter_channels//2, 1, bias=False),
-                            nn.ReLU(True),
-                            nn.Conv2d(inter_channels//2, inter_channels, 1, bias=True),
+                            nn.Conv2d(inter_channels, inter_channels, 1, bias=True),
                             nn.Sigmoid())
         self.gff = PAM_Module(in_dim=inter_channels, key_dim=inter_channels//8,value_dim=inter_channels,out_dim=inter_channels,norm_layer=norm_layer)
 
