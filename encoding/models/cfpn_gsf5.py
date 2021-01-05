@@ -165,20 +165,23 @@ class Context(nn.Module):
 class localUp(nn.Module):
     def __init__(self, in_channels, out_channels, norm_layer, up_kwargs):
         super(localUp, self).__init__()
-        self.connect = nn.Sequential(nn.Conv2d(in_channels, 32, 1, padding=0, dilation=1, bias=False),
-                                   norm_layer(32),
+        self.connect = nn.Sequential(nn.Conv2d(in_channels, out_channels//2, 1, padding=0, dilation=1, bias=False),
+                                   norm_layer(out_channels//2),
                                    nn.ReLU())
-        self.project = nn.Sequential(nn.Conv2d(out_channels, 32, 1, padding=0, dilation=1, bias=False),
-                                   norm_layer(32),
+        self.project = nn.Sequential(nn.Conv2d(out_channels, out_channels//2, 1, padding=0, dilation=1, bias=False),
+                                   norm_layer(out_channels//2),
                                    nn.ReLU())
 
         self._up_kwargs = up_kwargs
-        self.refine = nn.Sequential(nn.Conv2d(64, 64, 3, padding=1, dilation=1, bias=False),
+        self.refine = nn.Sequential(nn.Conv2d(out_channels, out_channels//2, 3, padding=1, dilation=1, bias=False),
+                                   norm_layer(out_channels//2),
                                    nn.ReLU(),
-                                   nn.Conv2d(64, 64, 3, padding=1, dilation=1, bias=False),
+                                   nn.Conv2d(out_channels//2, out_channels//2, 3, padding=1, dilation=1, bias=False),
+                                   norm_layer(out_channels//2),
                                    nn.ReLU(),
                                     )
-        self.project2 = nn.Sequential(nn.Conv2d(64, out_channels, 1, padding=0, dilation=1, bias=False)
+        self.project2 = nn.Sequential(nn.Conv2d(out_channels//2, out_channels, 1, padding=0, dilation=1, bias=False),
+                                   norm_layer(out_channels),
                                    )
         self.relu = nn.ReLU()
     def forward(self, c1,c2):
