@@ -7,14 +7,14 @@ import torch.nn.functional as F
 from .fcn import FCNHead
 from .base import BaseNet
 
-__all__ = ['cfpn_gsf', 'get_cfpn_gsf']
+__all__ = ['cfpn_gsf2', 'get_cfpn_gsf2']
 
 
-class cfpn_gsf(BaseNet):
+class cfpn_gsf2(BaseNet):
     def __init__(self, nclass, backbone, aux=True, se_loss=False, norm_layer=nn.BatchNorm2d, **kwargs):
-        super(cfpn_gsf, self).__init__(nclass, backbone, aux, se_loss, norm_layer=norm_layer, **kwargs)
+        super(cfpn_gsf2, self).__init__(nclass, backbone, aux, se_loss, norm_layer=norm_layer, **kwargs)
 
-        self.head = cfpn_gsfHead(2048, nclass, norm_layer, se_loss, jpu=kwargs['jpu'], up_kwargs=self._up_kwargs)
+        self.head = cfpn_gsf2Head(2048, nclass, norm_layer, se_loss, jpu=kwargs['jpu'], up_kwargs=self._up_kwargs)
         if aux:
             self.auxlayer = FCNHead(1024, nclass, norm_layer)
 
@@ -32,10 +32,10 @@ class cfpn_gsf(BaseNet):
 
 
 
-class cfpn_gsfHead(nn.Module):
+class cfpn_gsf2Head(nn.Module):
     def __init__(self, in_channels, out_channels, norm_layer, se_loss, jpu=False, up_kwargs=None,
                  atrous_rates=(12, 24, 36)):
-        super(cfpn_gsfHead, self).__init__()
+        super(cfpn_gsf2Head, self).__init__()
         self.se_loss = se_loss
         self._up_kwargs = up_kwargs
 
@@ -52,7 +52,7 @@ class cfpn_gsfHead(nn.Module):
                             nn.Sigmoid())
         self.gff = PAM_Module(in_dim=inter_channels, key_dim=inter_channels//8,value_dim=inter_channels,out_dim=inter_channels,norm_layer=norm_layer)
 
-        self.conv6 = nn.Sequential(nn.Dropout2d(0.1), nn.Conv2d(inter_channels, out_channels, 1))
+        self.conv6 = nn.Sequential(nn.Dropout2d(0.1), nn.Conv2d(2*inter_channels, out_channels, 1))
 
         self.localUp3=localUp(512, inter_channels, norm_layer, up_kwargs)
         self.localUp4=localUp(1024, inter_channels, norm_layer, up_kwargs)
@@ -95,13 +95,13 @@ class cfpn_gsfHead(nn.Module):
         #gp
         gp = self.gap(c4)    
         # se
-        se = self.se(gp)
+        # se = self.se(gp)
         # out = out + self.project_gp(gp)
         
-        out = out + se*out
+        # out = out + se*out
         out = self.gff(out)
         #
-        # out = torch.cat([out, gp.expand_as(out)], dim=1)
+        out = torch.cat([out, gp.expand_as(out)], dim=1)
         return self.conv6(out)
 
 class Context(nn.Module):
@@ -149,11 +149,11 @@ class localUp(nn.Module):
         return out
 
 
-def get_cfpn_gsf(dataset='pascal_voc', backbone='resnet50', pretrained=False,
+def get_cfpn_gsf2(dataset='pascal_voc', backbone='resnet50', pretrained=False,
                  root='~/.encoding/models', **kwargs):
     # infer number of classes
     from ..datasets import datasets
-    model = cfpn_gsf(datasets[dataset.lower()].NUM_CLASS, backbone=backbone, root=root, **kwargs)
+    model = cfpn_gsf2(datasets[dataset.lower()].NUM_CLASS, backbone=backbone, root=root, **kwargs)
     if pretrained:
         raise NotImplementedError
 

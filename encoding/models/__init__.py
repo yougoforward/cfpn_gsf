@@ -6,7 +6,7 @@ from .psp import *
 from .encnet import *
 from .deeplabv3 import *
 from .cfpn_gsf import *
-
+from .cfpn_gsf2 import *
 
 def get_segmentation_model(name, **kwargs):
     from .fcn import get_fcn
@@ -17,5 +17,6 @@ def get_segmentation_model(name, **kwargs):
         'deeplab': get_deeplab,
         
         'cfpn_gsf': get_cfpn_gsf,
+        'cfpn_gsf2': get_cfpn_gsf2,
     }
     return models[name.lower()](**kwargs)
