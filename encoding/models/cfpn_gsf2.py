@@ -93,10 +93,10 @@ class cfpn_gsf2Head(nn.Module):
         #gp
         gp = self.gap(c4)    
         # se
-        # se = self.se(gp)
+        se = self.se(gp)
         # out = out + self.project_gp(gp)
         
-        # out = out + se*out
+        out = out + se*out
         out = self.gff(out)
         #
         out = torch.cat([out, gp.expand_as(out)], dim=1)
@@ -127,7 +127,7 @@ class localUp(nn.Module):
                                    nn.ReLU())
 
         self._up_kwargs = up_kwargs
-        self.refine = nn.Sequential(nn.Conv2d(out_channels, out_channels//2, 3, padding=1, dilation=1, bias=False),
+        self.refine = nn.Sequential(nn.Conv2d(out_channels*3//2, out_channels//2, 3, padding=1, dilation=1, bias=False),
                                    norm_layer(out_channels//2),
                                    nn.ReLU(),
                                     )
@@ -139,8 +139,8 @@ class localUp(nn.Module):
         n,c,h,w =c1.size()
         c1p = self.connect(c1) # n, 64, h, w
         c2 = F.interpolate(c2, (h,w), **self._up_kwargs)
-        c2p = self.project(c2)
-        out = torch.cat([c1p,c2p], dim=1)
+        # c2p = self.project(c2)
+        out = torch.cat([c1p,c2], dim=1)
         out = self.refine(out)
         out = self.project2(out)
         out = self.relu(c2+out)
