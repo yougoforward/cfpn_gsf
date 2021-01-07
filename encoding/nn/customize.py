@@ -247,3 +247,37 @@ class Mean(Module):
 
     def forward(self, input):
         return input.mean(self.dim, self.keep_dim)
+
+class JUM2(nn.Module):
+    def __init__(self, in_channels, width, dilation, norm_layer, up_kwargs):
+        super(JUM2, self).__init__()
+        self.up_kwargs = up_kwargs
+
+        # self.conv_l = nn.Sequential(
+        #     nn.Conv2d(in_channels[-1], width, 3, padding=1, bias=False),
+        #     norm_layer(width),
+        #     nn.ReLU(inplace=True))
+        self.conv_h = nn.Sequential(
+            nn.Conv2d(in_channels[-2], width, 3, padding=1, bias=False),
+            norm_layer(width),
+            nn.ReLU(inplace=True))
+
+        norm_layer = lambda n_channels: nn.GroupNorm(32, n_channels)
+        self.dilation1 = nn.Sequential(SeparableConv2d(2*width, width, kernel_size=3, padding=dilation, dilation=dilation, bias=False, norm_layer=norm_layer),
+                                       norm_layer(width),
+                                       nn.ReLU(inplace=True))
+        self.dilation2 = nn.Sequential(SeparableConv2d(2*width, width, kernel_size=3, padding=2*dilation, dilation=2*dilation, bias=False, norm_layer=norm_layer),
+                                       norm_layer(width),
+                                       nn.ReLU(inplace=True))
+        self.dilation3 = nn.Sequential(SeparableConv2d(2*width, width, kernel_size=3, padding=4*dilation, dilation=4*dilation, bias=False, norm_layer=norm_layer),
+                                       norm_layer(width),
+                                       nn.ReLU(inplace=True))
+
+    def forward(self, x_l, x_h):
+        feats = [x_l, self.conv_h(x_h)]
+        _, _, h, w = feats[-1].size()
+        feats[-2] = F.upsample(feats[-2], (h, w), **self.up_kwargs)
+        feat = torch.cat(feats, dim=1)
+        feat = torch.cat([feats[-2], self.dilation1(feat), self.dilation2(feat), self.dilation3(feat)], dim=1)
+
+        return feat

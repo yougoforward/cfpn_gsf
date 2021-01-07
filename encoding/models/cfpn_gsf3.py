@@ -61,7 +61,7 @@ class cfpn_gsf3Head(nn.Module):
         self.context3 = Context(inter_channels, inter_channels, inter_channels, 8, norm_layer)
         self.project3 = nn.Sequential(nn.Conv2d(2*inter_channels, inter_channels, 1, padding=0, dilation=1, bias=False),
                                    norm_layer(inter_channels), nn.ReLU())
-        self.context2 = Context(inter_channels, inter_channels, inter_channels, 8, norm_layer)
+        self.context2 = Context(2*inter_channels, inter_channels, inter_channels, 8, norm_layer)
 
         self.project = nn.Sequential(nn.Conv2d(6*inter_channels, inter_channels, 1, padding=0, dilation=1, bias=False),
                                    norm_layer(inter_channels),
@@ -159,7 +159,7 @@ class localUp2(nn.Module):
         c1p = self.connect(c1) # n, 64, h, w
         c2 = F.interpolate(c2, (h,w), **self._up_kwargs)
         out = torch.cat([c1p,c2], dim=1)
-        out = self.refine(out)
+        # out = self.refine(out)
         return out
 
 def get_cfpn_gsf3(dataset='pascal_voc', backbone='resnet50', pretrained=False,
