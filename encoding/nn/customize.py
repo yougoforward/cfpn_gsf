@@ -272,6 +272,10 @@ class JUM2(nn.Module):
         self.dilation3 = nn.Sequential(SeparableConv2d(2*width, width, kernel_size=3, padding=4*dilation, dilation=4*dilation, bias=False, norm_layer=norm_layer),
                                        norm_layer(width),
                                        nn.ReLU(inplace=True))
+        self.project = nn.Sequential(
+            nn.Conv2d(width*4, width, 1, padding=0, bias=False),
+            norm_layer(width),
+            nn.ReLU(inplace=True))
 
     def forward(self, x_l, x_h):
         feats = [x_l, self.conv_h(x_h)]
@@ -279,5 +283,6 @@ class JUM2(nn.Module):
         feats[-2] = F.upsample(feats[-2], (h, w), **self.up_kwargs)
         feat = torch.cat(feats, dim=1)
         feat = torch.cat([feats[-2], self.dilation1(feat), self.dilation2(feat), self.dilation3(feat)], dim=1)
+        feat = self.project(feat)
 
         return feat
