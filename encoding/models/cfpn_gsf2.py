@@ -53,7 +53,7 @@ class cfpn_gsf2Head(nn.Module):
         self.conv6 = nn.Sequential(nn.Dropout2d(0.1), nn.Conv2d(3*inter_channels, out_channels, 1))
 
         self.localUp3=localUp(512, inter_channels, norm_layer, up_kwargs)
-        self.localUp4=localUp2(1024, inter_channels, norm_layer, up_kwargs)
+        self.localUp4=localUp(1024, inter_channels, norm_layer, up_kwargs)
 
         self.context4 = Context(in_channels, inter_channels, inter_channels, 8, norm_layer)
         self.project4 = nn.Sequential(nn.Conv2d(2*inter_channels, inter_channels, 1, padding=0, dilation=1, bias=False),
@@ -96,7 +96,7 @@ class cfpn_gsf2Head(nn.Module):
         out = out + se*out
         out = self.gff(out)
         #
-        out = torch.cat([out, gp.expand_as(out)], dim=1)
+        out = torch.cat([out, gp.expand_as(out2)], dim=1)
         return self.conv6(out)
 
 class Context(nn.Module):
