@@ -67,7 +67,6 @@ class cfpn_gsfHead(nn.Module):
                                    norm_layer(inter_channels),
                                    nn.ReLU(),
                                    )
-        self.relu = nn.ReLU()
         
         
     def forward(self, c1,c2,c3,c4):
