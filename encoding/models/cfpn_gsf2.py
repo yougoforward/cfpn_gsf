@@ -164,12 +164,12 @@ class localUp(nn.Module):
 class localUp2(nn.Module):
     def __init__(self, in_channels, out_channels, norm_layer, up_kwargs):
         super(localUp2, self).__init__()
-        self.connect = nn.Sequential(nn.Conv2d(in_channels, out_channels//2, 1, padding=0, dilation=1, bias=False),
-                                   norm_layer(out_channels//2),
+        self.connect = nn.Sequential(nn.Conv2d(in_channels, out_channels//4, 1, padding=0, dilation=1, bias=False),
+                                   norm_layer(out_channels//4),
                                    nn.ReLU())
 
         self._up_kwargs = up_kwargs
-        self.refine = nn.Sequential(nn.Conv2d(out_channels+out_channels//2, out_channels, 3, padding=1, dilation=1, bias=False),
+        self.refine = nn.Sequential(nn.Conv2d(out_channels+out_channels//4, out_channels, 3, padding=1, dilation=1, bias=False),
                                    norm_layer(out_channels),
                                    nn.ReLU(),
                                    nn.Conv2d(out_channels, out_channels, 3, padding=1, dilation=1, bias=False),
