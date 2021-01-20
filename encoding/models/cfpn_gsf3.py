@@ -190,7 +190,7 @@ class PAM_Module(nn.Module):
         out = torch.bmm(proj_value, attention.permute(0, 2, 1))
         out = out.view(m_batchsize, C, height, width)
 
-        gamma = self.gamma(x)
-        out = (1-gamma)*out + gamma*x
+        # gamma = self.gamma(x)
+        # out = (1-gamma)*out + gamma*x
         return out
 
