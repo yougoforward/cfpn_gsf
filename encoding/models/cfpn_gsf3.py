@@ -178,7 +178,8 @@ class PAM_Module(nn.Module):
                 out : attention value + input feature
                 attention: B X (HxW) X (HxW)
         """
-        xp = self.pool(x)
+        # xp = self.pool(x)
+        xp = x
         m_batchsize, C, height, width = x.size()
         m_batchsize, C, hp, wp = xp.size()
         proj_query = self.query_conv(x).view(m_batchsize, -1, width*height).permute(0, 2, 1)
@@ -190,7 +191,7 @@ class PAM_Module(nn.Module):
         out = torch.bmm(proj_value, attention.permute(0, 2, 1))
         out = out.view(m_batchsize, C, height, width)
 
-        # gamma = self.gamma(x)
-        # out = (1-gamma)*out + gamma*x
+        gamma = self.gamma(x)
+        out = (1-gamma)*out + gamma*x
         return out
 
