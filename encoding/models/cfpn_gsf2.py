@@ -77,6 +77,8 @@ class cfpn_gsf2Head(nn.Module):
         
     def forward(self, c1,c2,c3,c4):
         _,_, h,w = c2.size()
+        #gp
+        gp = self.gap(c4)   
         c4 = self.conv5(c4)
         cat4, p4_1, p4_8=self.context4(c4)
         p4 = self.project4(cat4)
@@ -94,8 +96,8 @@ class cfpn_gsf2Head(nn.Module):
         p3_8 = F.interpolate(p3_8, (h,w), **self._up_kwargs)
         out = self.project(torch.cat([p2_1,p2_8,p3_1,p3_8,p4_1,p4_8], dim=1))
 
-        #gp
-        gp = self.gap(c4)    
+        # #gp
+        # gp = self.gap(c4)    
         # se
         se = self.se(gp)
         
