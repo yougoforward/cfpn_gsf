@@ -168,7 +168,7 @@ class PAM_Module(nn.Module):
         self.gamma = nn.Sequential(nn.Conv2d(in_channels=in_dim, out_channels=1, kernel_size=1, bias=True), nn.Sigmoid())
 
         self.softmax = nn.Softmax(dim=-1)
-        self.div_term = torch.sqrt(key_dim)
+        self.div_term = key_dim**-0.5
 
 
     def forward(self, x):
