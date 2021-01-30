@@ -168,6 +168,7 @@ class PAM_Module(nn.Module):
         self.gamma = nn.Sequential(nn.Conv2d(in_channels=in_dim, out_channels=1, kernel_size=1, bias=True), nn.Sigmoid())
 
         self.softmax = nn.Softmax(dim=-1)
+        self.div_term = torch.sqrt(key_dim)
 
 
     def forward(self, x):
@@ -183,7 +184,7 @@ class PAM_Module(nn.Module):
         m_batchsize, C, hp, wp = xp.size()
         proj_query = self.query_conv(x).view(m_batchsize, -1, width*height).permute(0, 2, 1)
         proj_key = self.key_conv(xp).view(m_batchsize, -1, wp*hp)
-        energy = torch.bmm(proj_query, proj_key)
+        energy = torch.bmm(proj_query, proj_key)/self.div_term
         attention = self.softmax(energy)
         proj_value = xp.view(m_batchsize, -1, wp*hp)
         
