@@ -215,7 +215,7 @@ class PAM_Module(nn.Module):
 
         return rel_logits_h, rel_logits_w
     
-    def relative_logits_1d(self, q, rel_k, H, W, Nh, case):
+    def relative_logits_1d(self, q, rel_k, H, W, case):
         rel_logits = torch.einsum('bxyd,md->bxym', q, rel_k)
         rel_logits = torch.reshape(rel_logits, (-1, H, W, 2 * W - 1))
         rel_logits = self.rel_to_abs(rel_logits)
