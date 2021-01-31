@@ -207,10 +207,10 @@ class PAM_Module(nn.Module):
         B, dk, H, W = q.size()
         q = torch.transpose(q, 1, 3).transpose(1, 2) # b,h,w,c
 
-        key_rel_w = nn.Parameter(torch.randn((2 * W - 1, dk), requires_grad=True)).to(device)
+        key_rel_w = nn.Parameter(torch.randn((2 * W - 1, dk), requires_grad=True)).to(q.device)
         rel_logits_w = self.relative_logits_1d(q, key_rel_w, H, W, "w")
 
-        key_rel_h = nn.Parameter(torch.randn((2 * H - 1, dk), requires_grad=True)).to(device)
+        key_rel_h = nn.Parameter(torch.randn((2 * H - 1, dk), requires_grad=True)).to(q.device)
         rel_logits_h = self.relative_logits_1d(torch.transpose(q, 2, 3), key_rel_h, W, H, "h")
 
         return rel_logits_h, rel_logits_w
@@ -234,11 +234,11 @@ class PAM_Module(nn.Module):
     def rel_to_abs(self, x):
         B, Nh, L, _ = x.size()
 
-        col_pad = torch.zeros((B, Nh, L, 1)).to(device)
+        col_pad = torch.zeros((B, Nh, L, 1)).to(x.device)
         x = torch.cat((x, col_pad), dim=3)
 
         flat_x = torch.reshape(x, (B, Nh, L * 2 * L))
-        flat_pad = torch.zeros((B, Nh, L - 1)).to(device)
+        flat_pad = torch.zeros((B, Nh, L - 1)).to(x.device)
         flat_x_padded = torch.cat((flat_x, flat_pad), dim=2)
 
         final_x = torch.reshape(flat_x_padded, (B, Nh, L + 1, 2 * L - 1))
