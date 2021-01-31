@@ -211,7 +211,7 @@ class PAM_Module(nn.Module):
         rel_logits_w = self.relative_logits_1d(q, key_rel_w, H, W, "w")
 
         key_rel_h = nn.Parameter(torch.randn((2 * H - 1, dk), requires_grad=True)).to(q.device)
-        rel_logits_h = self.relative_logits_1d(torch.transpose(q, 2, 3), key_rel_h, W, H, "h")
+        rel_logits_h = self.relative_logits_1d(torch.transpose(q, 1, 2), key_rel_h, W, H, "h")
 
         return rel_logits_h, rel_logits_w
     
