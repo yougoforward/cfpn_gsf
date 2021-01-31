@@ -180,7 +180,8 @@ class PAM_Module(nn.Module):
                 out : attention value + input feature
                 attention: B X (HxW) X (HxW)
         """
-        xp = self.pool(x)
+        # xp = self.pool(x)
+        xp = x
         m_batchsize, C, height, width = x.size()
         m_batchsize, C, hp, wp = xp.size()
         q = self.query_conv(x)
