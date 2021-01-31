@@ -232,17 +232,17 @@ class PAM_Module(nn.Module):
         return rel_logits
 
     def rel_to_abs(self, x):
-        B, L, _ = x.size()
+        B, Nh, L, _ = x.size()
 
-        col_pad = torch.zeros((B, L, 1)).to(device)
-        x = torch.cat((x, col_pad), dim=2)
+        col_pad = torch.zeros((B, Nh, L, 1)).to(device)
+        x = torch.cat((x, col_pad), dim=3)
 
-        flat_x = torch.reshape(x, (B, L * 2 * L))
-        flat_pad = torch.zeros((B, L - 1)).to(device)
-        flat_x_padded = torch.cat((flat_x, flat_pad), dim=1)
+        flat_x = torch.reshape(x, (B, Nh, L * 2 * L))
+        flat_pad = torch.zeros((B, Nh, L - 1)).to(device)
+        flat_x_padded = torch.cat((flat_x, flat_pad), dim=2)
 
-        final_x = torch.reshape(flat_x_padded, (B, L + 1, 2 * L - 1))
-        final_x = final_x[:, :L, L - 1:]
+        final_x = torch.reshape(flat_x_padded, (B, Nh, L + 1, 2 * L - 1))
+        final_x = final_x[:, :, :L, L - 1:]
         return final_x
     
 
