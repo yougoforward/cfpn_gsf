@@ -107,8 +107,7 @@ class Context(nn.Module):
                                    norm_layer(width), nn.ReLU())
 
     def forward(self, x):
-        # feat0 = self.dconv0(x)
-        feat0 = x
+        feat0 = self.dconv0(x)
         feat1 = self.dconv1(x)
         cat = torch.cat([feat0, feat1], dim=1)  
         return cat, feat0, feat1
