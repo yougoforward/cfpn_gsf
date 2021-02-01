@@ -95,7 +95,7 @@ class cfpn_gsf3Head(nn.Module):
         out = out + se*out
         out = self.gff(out)
         #
-        # out = torch.cat([out, gp.expand_as(out)], dim=1)
+        out = torch.cat([out, gp.expand_as(out)], dim=1)
         return self.conv6(out)
 
 class Context(nn.Module):
@@ -178,8 +178,8 @@ class PAM_Module(nn.Module):
                 out : attention value + input feature
                 attention: B X (HxW) X (HxW)
         """
-        # xp = self.pool(x)
-        xp = x
+        xp = self.pool(x)
+        # xp = x
         m_batchsize, C, height, width = x.size()
         m_batchsize, C, hp, wp = xp.size()
         proj_query = self.query_conv(x).view(m_batchsize, -1, width*height).permute(0, 2, 1)
@@ -191,8 +191,8 @@ class PAM_Module(nn.Module):
         out = torch.bmm(proj_value, attention.permute(0, 2, 1))
         out = out.view(m_batchsize, C, height, width)
 
-        # gamma = self.gamma(x)
-        # out = (1-gamma)*out + gamma*x
-        out = torch.cat([x,out], dim=1)
+        gamma = self.gamma(x)
+        out = (1-gamma)*out + gamma*x
+        # out = torch.cat([x,out], dim=1)
         return out
 
