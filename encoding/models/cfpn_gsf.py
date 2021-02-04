@@ -168,8 +168,6 @@ class PAM_Module(nn.Module):
         self.gamma = nn.Sequential(nn.Conv2d(in_channels=in_dim, out_channels=1, kernel_size=1, bias=True), nn.Sigmoid())
 
         self.softmax = nn.Softmax(dim=-1)
-        self.div_term = key_dim**-0.5
-        self.relative = True
 
 
     def forward(self, x):
@@ -180,20 +178,12 @@ class PAM_Module(nn.Module):
                 out : attention value + input feature
                 attention: B X (HxW) X (HxW)
         """
-        # xp = self.pool(x)
-        xp = x
+        xp = self.pool(x)
         m_batchsize, C, height, width = x.size()
         m_batchsize, C, hp, wp = xp.size()
-        q = self.query_conv(x)
-        proj_query = q.view(m_batchsize, -1, width*height).permute(0, 2, 1)
+        proj_query = self.query_conv(x).view(m_batchsize, -1, width*height).permute(0, 2, 1)
         proj_key = self.key_conv(xp).view(m_batchsize, -1, wp*hp)
         energy = torch.bmm(proj_query, proj_key)
-        
-        if self.relative:
-            h_rel_logits, w_rel_logits = self.relative_logits(q)
-            energy += h_rel_logits
-            energy += w_rel_logits
-            
         attention = self.softmax(energy)
         proj_value = xp.view(m_batchsize, -1, wp*hp)
         
@@ -203,47 +193,4 @@ class PAM_Module(nn.Module):
         gamma = self.gamma(x)
         out = (1-gamma)*out + gamma*x
         return out
-    
-    def relative_logits(self, q):
-        B, dk, H, W = q.size()
-        q = torch.transpose(q, 1, 3).transpose(1, 2) # b,h,w,c
-
-        key_rel_w = nn.Parameter(torch.randn((2 * W - 1, dk), requires_grad=True)).to(q.device)
-        rel_logits_w = self.relative_logits_1d(q, key_rel_w, H, W, "w")
-
-        key_rel_h = nn.Parameter(torch.randn((2 * H - 1, dk), requires_grad=True)).to(q.device)
-        rel_logits_h = self.relative_logits_1d(torch.transpose(q, 1, 2), key_rel_h, W, H, "h")
-
-        return rel_logits_h, rel_logits_w
-    
-    def relative_logits_1d(self, q, rel_k, H, W, case):
-        rel_logits = torch.einsum('bxyd,md->bxym', q, rel_k)
-        rel_logits = torch.reshape(rel_logits, (-1, H, W, 2 * W - 1))
-        rel_logits = self.rel_to_abs(rel_logits)
-
-        rel_logits = torch.reshape(rel_logits, (-1, H, W, W))
-        rel_logits = torch.unsqueeze(rel_logits, dim=3)
-        rel_logits = rel_logits.repeat((1, 1, H, 1, 1))
-
-        if case == "w":
-            rel_logits = torch.transpose(rel_logits, 2, 3)
-        elif case == "h":
-            rel_logits = torch.transpose(rel_logits, 1, 3).transpose(3, 4).transpose(2, 4)
-        rel_logits = torch.reshape(rel_logits, (-1, H * W, H * W))
-        return rel_logits
-
-    def rel_to_abs(self, x):
-        B, Nh, L, _ = x.size()
-
-        col_pad = torch.zeros((B, Nh, L, 1)).to(x.device)
-        x = torch.cat((x, col_pad), dim=3)
-
-        flat_x = torch.reshape(x, (B, Nh, L * 2 * L))
-        flat_pad = torch.zeros((B, Nh, L - 1)).to(x.device)
-        flat_x_padded = torch.cat((flat_x, flat_pad), dim=2)
-
-        final_x = torch.reshape(flat_x_padded, (B, Nh, L + 1, 2 * L - 1))
-        final_x = final_x[:, :, :L, L - 1:]
-        return final_x
-    
 
