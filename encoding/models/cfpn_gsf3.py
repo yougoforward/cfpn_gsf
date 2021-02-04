@@ -120,7 +120,7 @@ class localUp(nn.Module):
                                    nn.ReLU())
 
         self._up_kwargs = up_kwargs
-        self.refine = nn.Sequential(nn.Conv2d(out_channels, out_channels//2, 3, padding=1, dilation=1, bias=False),
+        self.refine = nn.Sequential(nn.Conv2d(out_channels, out_channels//2, 3, padding=2, dilation=2, bias=False),
                                    norm_layer(out_channels//2),
                                    nn.ReLU(),
                                     )
