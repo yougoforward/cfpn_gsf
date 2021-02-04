@@ -123,9 +123,6 @@ class localUp(nn.Module):
         self.refine = nn.Sequential(nn.Conv2d(out_channels, out_channels//2, 3, padding=2, dilation=2, bias=False),
                                    norm_layer(out_channels//2),
                                    nn.ReLU(),
-                                   nn.Conv2d(out_channels//2, out_channels//2, 3, padding=2, dilation=2, bias=False),
-                                   norm_layer(out_channels//2),
-                                   nn.ReLU(),
                                     )
         self.project2 = nn.Sequential(nn.Conv2d(out_channels//2, out_channels, 1, padding=0, dilation=1, bias=False),
                                    norm_layer(out_channels),
