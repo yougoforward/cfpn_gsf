@@ -103,8 +103,8 @@ class cfpn_gsf4Head(nn.Module):
         pred = self.conv6(out)
         hot = F.softmax(pred, dim=1)>0.5 # n,cls,h,w
         # whole feature
-        div_term = torch.sum(hot, dim=(2,3), keepdim=True)+1e-10
-        whole_fea = torch.bmm(out.view(n,self.fea_chs,-1)/div_term, hot.view(n,self.cls_chs,-1).permute(0,2,1)) # n, c, cls
+        div_term = torch.sum(hot, dim=(2,3), keepdim=False)+1e-10
+        whole_fea = torch.bmm(out.view(n,self.fea_chs,-1), (hot/div_term).view(n,self.cls_chs,-1).permute(0,2,1)) # n, c, cls
         whole_fea_spred = torch.bmm(whole_fea, pred.view(n, self.cls_chs, -1)).view(n, self.fea_chs, h, w)
         out = torch.cat([gff_out, whole_fea_spred, gp.expand_as(gff_out)], dim=1)
         out = self.conv7(out)

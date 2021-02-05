@@ -120,19 +120,20 @@ class localUp(nn.Module):
                                    nn.ReLU())
 
         self._up_kwargs = up_kwargs
-        self.refine = nn.Sequential(nn.Conv2d(out_channels, out_channels, 3, padding=2, dilation=2, bias=False),
+        self.refine = nn.Sequential(nn.Conv2d(2*out_channels, out_channels, 3, padding=2, dilation=2, bias=False),
                                    norm_layer(out_channels),
                                    nn.ReLU(),
                                     )
-        self.project2 = nn.Sequential(nn.Conv2d(out_channels//2, out_channels, 1, padding=0, dilation=1, bias=False),
-                                   norm_layer(out_channels),
-                                   )
+        # self.project2 = nn.Sequential(nn.Conv2d(out_channels//2, out_channels, 1, padding=0, dilation=1, bias=False),
+        #                            norm_layer(out_channels),
+        #                            )
         self.relu = nn.ReLU()
     def forward(self, c1,c2):
         n,c,h,w =c1.size()
         c1p = self.connect(c1) # n, 64, h, w
         c2 = F.interpolate(c2, (h,w), **self._up_kwargs)
-        out = c2+c1p
+        # out = c2+c1p
+        out = torch.cat([c2,c1p], dim=1)
         out = self.refine(out)
         # out = self.project2(out)
         # out = self.relu(c2+out)
