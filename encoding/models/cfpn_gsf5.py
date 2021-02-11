@@ -7,14 +7,14 @@ import torch.nn.functional as F
 from .fcn import FCNHead
 from .base import BaseNet
 
-__all__ = ['cfpn_gsf55', 'get_cfpn_gsf55']
+__all__ = ['cfpn_gsf5', 'get_cfpn_gsf5']
 
 
-class cfpn_gsf55(BaseNet):
+class cfpn_gsf5(BaseNet):
     def __init__(self, nclass, backbone, aux=True, se_loss=False, norm_layer=nn.BatchNorm2d, **kwargs):
-        super(cfpn_gsf55, self).__init__(nclass, backbone, aux, se_loss, norm_layer=norm_layer, **kwargs)
+        super(cfpn_gsf5, self).__init__(nclass, backbone, aux, se_loss, norm_layer=norm_layer, **kwargs)
 
-        self.head = cfpn_gsf55Head(2048, nclass, norm_layer, se_loss, jpu=kwargs['jpu'], up_kwargs=self._up_kwargs)
+        self.head = cfpn_gsf5Head(2048, nclass, norm_layer, se_loss, jpu=kwargs['jpu'], up_kwargs=self._up_kwargs)
         if aux:
             self.auxlayer = FCNHead(1024, nclass, norm_layer)
 
@@ -32,10 +32,10 @@ class cfpn_gsf55(BaseNet):
 
 
 
-class cfpn_gsf55Head(nn.Module):
+class cfpn_gsf5Head(nn.Module):
     def __init__(self, in_channels, out_channels, norm_layer, se_loss, jpu=False, up_kwargs=None,
                  atrous_rates=(12, 24, 36)):
-        super(cfpn_gsf55Head, self).__init__()
+        super(cfpn_gsf5Head, self).__init__()
         self.se_loss = se_loss
         self._up_kwargs = up_kwargs
 
@@ -160,11 +160,11 @@ class localUp(nn.Module):
         return out
 
 
-def get_cfpn_gsf55(dataset='pascal_voc', backbone='resnet50', pretrained=False,
+def get_cfpn_gsf5(dataset='pascal_voc', backbone='resnet50', pretrained=False,
                  root='~/.encoding/models', **kwargs):
     # infer number of classes
     from ..datasets import datasets
-    model = cfpn_gsf55(datasets[dataset.lower()].NUM_CLASS, backbone=backbone, root=root, **kwargs)
+    model = cfpn_gsf5(datasets[dataset.lower()].NUM_CLASS, backbone=backbone, root=root, **kwargs)
     if pretrained:
         raise NotImplementedError
 
