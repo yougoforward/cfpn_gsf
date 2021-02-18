@@ -103,6 +103,8 @@ class cfpn_gsf3Head(nn.Module):
         # #
         # out = torch.cat([out, gp.expand_as(out)], dim=1)
         # out = self.project_gp(out)
+        # # out = self.gff(out)
+
         return self.conv6(out)
 
 class Context(nn.Module):
