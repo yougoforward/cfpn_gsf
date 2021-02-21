@@ -13,6 +13,7 @@ from .cfpn_gsf41 import *
 from .cfpn_gsf42 import *
 from .cfpn_gsf5 import *
 from .cfpn_gsf6 import *
+from .cfpn import *
 def get_segmentation_model(name, **kwargs):
     from .fcn import get_fcn
     models = {
@@ -29,5 +30,6 @@ def get_segmentation_model(name, **kwargs):
         'cfpn_gsf42': get_cfpn_gsf42,
         'cfpn_gsf5': get_cfpn_gsf5,
         'cfpn_gsf6': get_cfpn_gsf6,
+        'cfpn': get_cfpn,
     }
     return models[name.lower()](**kwargs)
