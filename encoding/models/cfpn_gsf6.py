@@ -93,7 +93,7 @@ class cfpn_gsf6Head(nn.Module):
         se = self.se(gp)
         
         out = out + se*out
-        out = self.gff(out)
+        # out = self.gff(out)
         #
         out = torch.cat([out, gp.expand_as(out)], dim=1)
         return self.conv6(out)
