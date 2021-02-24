@@ -204,9 +204,9 @@ class ASPP_Module(nn.Module):
         out_channels = in_channels
         rate1, rate2, rate3 = tuple(atrous_rates)
 
-        self.b1 = nn.AvgPool2d(rate1*2+1, stride=1)
-        self.b2 = nn.AvgPool2d(rate2*2+1, stride=1)
-        self.b3 = nn.AvgPool2d(rate3*2+1, stride=1)
+        self.b1 = nn.AvgPool2d(rate1*2+1, stride=1, padding=rate1, count_include_pad=False)
+        self.b2 = nn.AvgPool2d(rate2*2+1, stride=1, padding=rate2, count_include_pad=False)
+        self.b3 = nn.AvgPool2d(rate3*2+1, stride=1, padding=rate3, count_include_pad=False)
 
         self.project = nn.Sequential(
             nn.Conv2d(4*out_channels, out_channels, 1, bias=False),
