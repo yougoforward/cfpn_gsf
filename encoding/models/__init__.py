@@ -20,6 +20,13 @@ from .cfpn_add3x3 import *
 from .cfpn_cat3x3 import *
 from .cfpn_cat3x3add3x3 import *
 
+from .cfpn_gsf_valconv import *
+from .cfpn_pam import *
+
+from .cfpn_1b import *
+from .cfpn_3b import *
+
+
 def get_segmentation_model(name, **kwargs):
     from .fcn import get_fcn
     models = {
@@ -42,6 +49,12 @@ def get_segmentation_model(name, **kwargs):
         'cfpn_add3x3': get_cfpn_add3x3,
         'cfpn_cat3x3': get_cfpn_cat3x3,
         'cfpn_cat3x3add3x3': get_cfpn_cat3x3add3x3,
+        
+        'cfpn_gsf_valconv': get_cfpn_gsf_valconv,
+        'cfpn_pam': get_cfpn_pam,
+        
+        'cfpn_1b': get_cfpn_1b,
+        'cfpn_3b': get_cfpn_3b,
         
     }
     return models[name.lower()](**kwargs)
