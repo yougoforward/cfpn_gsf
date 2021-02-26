@@ -195,7 +195,7 @@ class PAM_Module(nn.Module):
         out = (1-gamma)*out + gamma*x
         return out
 
-class ori_PAM_Module(Module):
+class ori_PAM_Module(nn.Module):
     """ Position attention module"""
     #Ref from SAGAN
     def __init__(self, in_dim, key_dim, value_dim, out_dim, norm_layer):
