@@ -6,15 +6,16 @@ import torch.nn.functional as F
 
 from .fcn import FCNHead
 from .base import BaseNet
+from .dpcn import DFConv2d
 
-__all__ = ['cfpn_gsf2', 'get_cfpn_gsf2']
+__all__ = ['cfpn_dpcn', 'get_cfpn_dpcn']
 
 
-class cfpn_gsf2(BaseNet):
+class cfpn_dpcn(BaseNet):
     def __init__(self, nclass, backbone, aux=True, se_loss=False, norm_layer=nn.BatchNorm2d, **kwargs):
-        super(cfpn_gsf2, self).__init__(nclass, backbone, aux, se_loss, norm_layer=norm_layer, **kwargs)
+        super(cfpn_dpcn, self).__init__(nclass, backbone, aux, se_loss, norm_layer=norm_layer, **kwargs)
 
-        self.head = cfpn_gsf2Head(2048, nclass, norm_layer, se_loss, jpu=kwargs['jpu'], up_kwargs=self._up_kwargs)
+        self.head = cfpn_dpcnHead(2048, nclass, norm_layer, se_loss, jpu=kwargs['jpu'], up_kwargs=self._up_kwargs)
         if aux:
             self.auxlayer = FCNHead(1024, nclass, norm_layer)
 
@@ -32,10 +33,10 @@ class cfpn_gsf2(BaseNet):
 
 
 
-class cfpn_gsf2Head(nn.Module):
+class cfpn_dpcnHead(nn.Module):
     def __init__(self, in_channels, out_channels, norm_layer, se_loss, jpu=False, up_kwargs=None,
                  atrous_rates=(12, 24, 36)):
-        super(cfpn_gsf2Head, self).__init__()
+        super(cfpn_dpcnHead, self).__init__()
         self.se_loss = se_loss
         self._up_kwargs = up_kwargs
 
@@ -93,7 +94,7 @@ class cfpn_gsf2Head(nn.Module):
         # se = self.se(gp)
         
         # out = out + se*out
-        out = self.gff(out)
+        # out = self.gff(out)
         #
         out = torch.cat([out, gp.expand_as(out)], dim=1)
         return self.conv6(out)
@@ -123,7 +124,7 @@ class localUp(nn.Module):
                                    nn.ReLU())
 
         self._up_kwargs = up_kwargs
-        self.refine = nn.Sequential(nn.Conv2d(out_channels, out_channels//2, 3, padding=1, dilation=1, bias=False),
+        self.refine = nn.Sequential(SeparableConv2d(out_channels, out_channels//2, kernel_size=3, stride=1, padding=2,              dilation=2, bias=False, norm_layer=norm_layer),
                                    norm_layer(out_channels//2),
                                    nn.ReLU(),
                                     )
@@ -143,11 +144,11 @@ class localUp(nn.Module):
         return out
 
 
-def get_cfpn_gsf2(dataset='pascal_voc', backbone='resnet50', pretrained=False,
+def get_cfpn_dpcn(dataset='pascal_voc', backbone='resnet50', pretrained=False,
                  root='~/.encoding/models', **kwargs):
     # infer number of classes
     from ..datasets import datasets
-    model = cfpn_gsf2(datasets[dataset.lower()].NUM_CLASS, backbone=backbone, root=root, **kwargs)
+    model = cfpn_dpcn(datasets[dataset.lower()].NUM_CLASS, backbone=backbone, root=root, **kwargs)
     if pretrained:
         raise NotImplementedError
 
@@ -194,3 +195,16 @@ class PAM_Module(nn.Module):
         out = (1-gamma)*out + gamma*x
         return out
 
+class SeparableConv2d(nn.Module):
+    def __init__(self, inplanes, planes, kernel_size=3, stride=1, padding=1, dilation=1, bias=False, norm_layer=nn.BatchNorm2d):
+        super(SeparableConv2d, self).__init__()
+
+        self.conv1 = nn.Conv2d(inplanes, inplanes, kernel_size, stride, padding, dilation, groups=inplanes, bias=bias)
+        self.bn = norm_layer(inplanes)
+        self.pointwise = nn.Conv2d(inplanes, planes, 1, 1, 0, 1, 1, bias=bias)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.bn(x)
+        x = self.pointwise(x)
+        return x

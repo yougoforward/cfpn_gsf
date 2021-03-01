@@ -6,15 +6,16 @@ import torch.nn.functional as F
 
 from .fcn import FCNHead
 from .base import BaseNet
+from .dcn import DFConv2d
 
-__all__ = ['cfpn_gsf2', 'get_cfpn_gsf2']
+__all__ = ['cfpn_dcn', 'get_cfpn_dcn']
 
 
-class cfpn_gsf2(BaseNet):
+class cfpn_dcn(BaseNet):
     def __init__(self, nclass, backbone, aux=True, se_loss=False, norm_layer=nn.BatchNorm2d, **kwargs):
-        super(cfpn_gsf2, self).__init__(nclass, backbone, aux, se_loss, norm_layer=norm_layer, **kwargs)
+        super(cfpn_dcn, self).__init__(nclass, backbone, aux, se_loss, norm_layer=norm_layer, **kwargs)
 
-        self.head = cfpn_gsf2Head(2048, nclass, norm_layer, se_loss, jpu=kwargs['jpu'], up_kwargs=self._up_kwargs)
+        self.head = cfpn_dcnHead(2048, nclass, norm_layer, se_loss, jpu=kwargs['jpu'], up_kwargs=self._up_kwargs)
         if aux:
             self.auxlayer = FCNHead(1024, nclass, norm_layer)
 
@@ -32,10 +33,10 @@ class cfpn_gsf2(BaseNet):
 
 
 
-class cfpn_gsf2Head(nn.Module):
+class cfpn_dcnHead(nn.Module):
     def __init__(self, in_channels, out_channels, norm_layer, se_loss, jpu=False, up_kwargs=None,
                  atrous_rates=(12, 24, 36)):
-        super(cfpn_gsf2Head, self).__init__()
+        super(cfpn_dcnHead, self).__init__()
         self.se_loss = se_loss
         self._up_kwargs = up_kwargs
 
@@ -93,7 +94,7 @@ class cfpn_gsf2Head(nn.Module):
         # se = self.se(gp)
         
         # out = out + se*out
-        out = self.gff(out)
+        # out = self.gff(out)
         #
         out = torch.cat([out, gp.expand_as(out)], dim=1)
         return self.conv6(out)
@@ -123,7 +124,8 @@ class localUp(nn.Module):
                                    nn.ReLU())
 
         self._up_kwargs = up_kwargs
-        self.refine = nn.Sequential(nn.Conv2d(out_channels, out_channels//2, 3, padding=1, dilation=1, bias=False),
+        self.refine = nn.Sequential(DFConv2d(out_channels, out_channels//2, with_modulated_dcn=True, kernel_size=3,
+                                    dilation=1, deformable_groups=1, bias=False),
                                    norm_layer(out_channels//2),
                                    nn.ReLU(),
                                     )
@@ -143,11 +145,11 @@ class localUp(nn.Module):
         return out
 
 
-def get_cfpn_gsf2(dataset='pascal_voc', backbone='resnet50', pretrained=False,
+def get_cfpn_dcn(dataset='pascal_voc', backbone='resnet50', pretrained=False,
                  root='~/.encoding/models', **kwargs):
     # infer number of classes
     from ..datasets import datasets
-    model = cfpn_gsf2(datasets[dataset.lower()].NUM_CLASS, backbone=backbone, root=root, **kwargs)
+    model = cfpn_dcn(datasets[dataset.lower()].NUM_CLASS, backbone=backbone, root=root, **kwargs)
     if pretrained:
         raise NotImplementedError
 
