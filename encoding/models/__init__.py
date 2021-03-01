@@ -25,6 +25,8 @@ from .cfpn_pam import *
 
 from .cfpn_1b import *
 from .cfpn_3b import *
+from .cfpn_dcn import *
+from .cfpn_dpcn import *
 
 
 def get_segmentation_model(name, **kwargs):
@@ -55,6 +57,9 @@ def get_segmentation_model(name, **kwargs):
         
         'cfpn_1b': get_cfpn_1b,
         'cfpn_3b': get_cfpn_3b,
+        
+        'cfpn_dcn': get_cfpn_dcn,
+        'cfpn_dpcn': get_cfpn_dpcn,
         
     }
     return models[name.lower()](**kwargs)
