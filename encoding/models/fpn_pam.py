@@ -40,7 +40,7 @@ class fpn_pamHead(nn.Module):
         self._up_kwargs = up_kwargs
 
         inter_channels = in_channels // 4
-        self.conv5 = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, bias=False),
+        self.conv5 = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 1, padding=0, bias=False),
                                    norm_layer(inter_channels),
                                    nn.ReLU(),
                                    )
@@ -52,11 +52,12 @@ class fpn_pamHead(nn.Module):
 
     def forward(self, c1,c2,c3,c4):
         _,_, h,w = c2.size()
+        out = self.conv5(c4)
                
-        out3 = self.localUp4(c3, c4)  
-        out2 = self.localUp3(c2, out3)
+        out3 = self.localUp4(c3, out)  
+        out = self.localUp3(c2, out3)
         
-        out = self.conv5(out2)
+        
         
         out = self.pam(out)
         

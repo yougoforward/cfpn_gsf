@@ -40,25 +40,25 @@ class fpn_asppHead(nn.Module):
         self._up_kwargs = up_kwargs
 
         inter_channels = in_channels // 4
-        # self.conv5 = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, bias=False),
-        #                            norm_layer(inter_channels),
-        #                            nn.ReLU(),
-        #                            )
+        self.conv5 = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 1, padding=0, bias=False),
+                                   norm_layer(inter_channels),
+                                   nn.ReLU(),
+                                   )
 
         self.conv6 = nn.Sequential(nn.Dropout2d(0.1), nn.Conv2d(inter_channels, out_channels, 1))
 
         self.localUp3=localUp(512, in_channels, norm_layer, up_kwargs)
         self.localUp4=localUp(1024, in_channels, norm_layer, up_kwargs)
-        self.aspp = ASPP_Module(in_channels, 256, inter_channels, atrous_rates, norm_layer, up_kwargs)
+        self.aspp = ASPP_Module(inter_channels, 256, inter_channels, atrous_rates, norm_layer, up_kwargs)
 
     def forward(self, c0,c1,c2,c3,c4):
         _,_, h,w = c2.size()
                
-        out3 = self.localUp4(c3, c4)  
-        out2 = self.localUp3(c2, out3)
-        
-        # out = self.conv5(out2)
-        out = self.aspp(out2)
+        out = self.conv5(c4)
+               
+        out3 = self.localUp4(c3, out)  
+        out = self.localUp3(c2, out3)
+        out = self.aspp(out)
         
         return self.conv6(out)
 
