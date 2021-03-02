@@ -28,6 +28,12 @@ from .cfpn_3b import *
 from .cfpn_dcn import *
 from .cfpn_dpcn import *
 
+from .fpn import *
+from .fpn_gp import *
+from .fpn_resup import *
+from .fpn_cfpn import *
+from .cfpn_nogp import *
+
 
 def get_segmentation_model(name, **kwargs):
     from .fcn import get_fcn
@@ -60,6 +66,12 @@ def get_segmentation_model(name, **kwargs):
         
         'cfpn_dcn': get_cfpn_dcn,
         'cfpn_dpcn': get_cfpn_dpcn,
+        
+        'fpn': get_fpn,
+        'fpn_gp': get_fpn_gp,
+        'fpn_resup': get_fpn_resup,
+        'fpn_cfpn': get_fpn_cfpn,
+        'cfpn_nogp': get_cfpn_nogp,
         
     }
     return models[name.lower()](**kwargs)

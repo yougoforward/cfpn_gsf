@@ -7,14 +7,14 @@ import torch.nn.functional as F
 from .fcn import FCNHead
 from .base import BaseNet
 
-__all__ = ['fpn', 'get_fpn']
+__all__ = ['fpn_gp', 'get_fpn_gp']
 
 
-class fpn(BaseNet):
+class fpn_gp(BaseNet):
     def __init__(self, nclass, backbone, aux=True, se_loss=False, norm_layer=nn.BatchNorm2d, **kwargs):
-        super(fpn, self).__init__(nclass, backbone, aux, se_loss, norm_layer=norm_layer, **kwargs)
+        super(fpn_gp, self).__init__(nclass, backbone, aux, se_loss, norm_layer=norm_layer, **kwargs)
 
-        self.head = fpnHead(2048, nclass, norm_layer, se_loss, jpu=kwargs['jpu'], up_kwargs=self._up_kwargs)
+        self.head = fpn_gpHead(2048, nclass, norm_layer, se_loss, jpu=kwargs['jpu'], up_kwargs=self._up_kwargs)
         if aux:
             self.auxlayer = FCNHead(1024, nclass, norm_layer)
 
@@ -32,10 +32,10 @@ class fpn(BaseNet):
 
 
 
-class fpnHead(nn.Module):
+class fpn_gpHead(nn.Module):
     def __init__(self, in_channels, out_channels, norm_layer, se_loss, jpu=False, up_kwargs=None,
                  atrous_rates=(12, 24, 36)):
-        super(fpnHead, self).__init__()
+        super(fpn_gpHead, self).__init__()
         self.se_loss = se_loss
         self._up_kwargs = up_kwargs
 
@@ -45,10 +45,14 @@ class fpnHead(nn.Module):
                                    nn.ReLU(),
                                    )
 
-        self.conv6 = nn.Sequential(nn.Dropout2d(0.1), nn.Conv2d(inter_channels, out_channels, 1))
+        self.conv6 = nn.Sequential(nn.Dropout2d(0.1), nn.Conv2d(2*inter_channels, out_channels, 1))
 
         self.localUp3=localUp(512, inter_channels, norm_layer, up_kwargs)
         self.localUp4=localUp(1024, inter_channels, norm_layer, up_kwargs)
+        self.gap = nn.Sequential(nn.AdaptiveAvgPool2d(1),
+                            nn.Conv2d(in_channels, inter_channels, 1, bias=False),
+                            norm_layer(inter_channels),
+                            nn.ReLU(True))
 
     def forward(self, c1,c2,c3,c4):
         _,_, h,w = c2.size()
@@ -56,6 +60,10 @@ class fpnHead(nn.Module):
                
         out3 = self.localUp4(c3, out)  
         out = self.localUp3(c2, out3)
+        #gp
+        gp = self.gap(c4)    
+        #
+        out = torch.cat([out, gp.expand_as(out)], dim=1)
         
         return self.conv6(out)
 
@@ -76,11 +84,11 @@ class localUp(nn.Module):
         return out
 
 
-def get_fpn(dataset='pascal_voc', backbone='resnet50', pretrained=False,
+def get_fpn_gp(dataset='pascal_voc', backbone='resnet50', pretrained=False,
                  root='~/.encoding/models', **kwargs):
     # infer number of classes
     from ..datasets import datasets
-    model = fpn(datasets[dataset.lower()].NUM_CLASS, backbone=backbone, root=root, **kwargs)
+    model = fpn_gp(datasets[dataset.lower()].NUM_CLASS, backbone=backbone, root=root, **kwargs)
     if pretrained:
         raise NotImplementedError
 
