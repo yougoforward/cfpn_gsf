@@ -6,7 +6,6 @@ import torch.nn.functional as F
 
 from .fcn import FCNHead
 from .base import BaseNet
-from .dpcn import DFConv2d
 
 __all__ = ['cfpn_dpcn', 'get_cfpn_dpcn']
 
