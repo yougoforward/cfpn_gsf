@@ -34,6 +34,8 @@ from .fpn_resup import *
 from .fpn_cfpn import *
 from .cfpn_nogp import *
 
+from .dfcn import *
+
 
 def get_segmentation_model(name, **kwargs):
     from .fcn import get_fcn
@@ -72,6 +74,7 @@ def get_segmentation_model(name, **kwargs):
         'fpn_resup': get_fpn_resup,
         'fpn_cfpn': get_fpn_cfpn,
         'cfpn_nogp': get_cfpn_nogp,
+        'dfcn': get_dfcn,
         
     }
     return models[name.lower()](**kwargs)
