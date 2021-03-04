@@ -111,7 +111,7 @@ class Context4(nn.Module):
                                    norm_layer(width), nn.ReLU())
         self.dconv2 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=6, dilation=6, bias=False),
                                    norm_layer(width), nn.ReLU())
-        self.dconv3 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=8, dilation=8, bias=False),
+        self.dconv3 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=9, dilation=9, bias=False),
                                    norm_layer(width), nn.ReLU())
 
     def forward(self, x):
