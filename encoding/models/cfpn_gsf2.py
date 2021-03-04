@@ -93,7 +93,7 @@ class cfpn_gsf2Head(nn.Module):
         # se = self.se(gp)
         
         # out = out + se*out
-        out = self.gff(out)
+        # out = self.gff(out)
         #
         out = torch.cat([out, gp.expand_as(out)], dim=1)
         return self.conv6(out)
@@ -101,7 +101,7 @@ class cfpn_gsf2Head(nn.Module):
 class Context(nn.Module):
     def __init__(self, in_channels, width, out_channels, dilation_base, norm_layer):
         super(Context, self).__init__()
-        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 1, padding=0, dilation=1, bias=False),
+        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=1, dilation=1, bias=False),
                                    norm_layer(width), nn.ReLU())
         self.dconv1 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=dilation_base, dilation=dilation_base, bias=False),
                                    norm_layer(width), nn.ReLU())
