@@ -41,6 +41,7 @@ from .fpn_cfpn3x3d1 import *
 from .fpn_cfpn3x3d2 import *
 from .fpn_cfpn3x3d4 import *
 from .fpn_cfpn9 import *
+from .cfpn3x3 import *
 
 
 def get_segmentation_model(name, **kwargs):
@@ -87,6 +88,7 @@ def get_segmentation_model(name, **kwargs):
         'fpn_cfpn3x3d2': get_fpn_cfpn3x3d2,
         'fpn_cfpn3x3d4': get_fpn_cfpn3x3d4,
         'fpn_cfpn9': get_fpn_cfpn9,
+        'cfpn3x3': get_cfpn3x3,
         
     }
     return models[name.lower()](**kwargs)
