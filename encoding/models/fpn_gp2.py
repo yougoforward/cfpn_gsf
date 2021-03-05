@@ -58,7 +58,7 @@ class fpn_gp2Head(nn.Module):
     def forward(self, c1,c2,c3,c4):
         _,_, h,w = c2.size()
         out = self.conv5(c4)
-        out = self.relu(out+self.gap(c4))
+        
                
         out3 = self.localUp4(c3, out)  
         out = self.localUp3(c2, out3)
@@ -66,7 +66,7 @@ class fpn_gp2Head(nn.Module):
         # gp = self.gap(c4)    
         #
         # out = torch.cat([out, gp.expand_as(out)], dim=1)
-        
+        out = self.relu(out+self.gap(c4))
         return self.conv6(out)
 
 class localUp(nn.Module):
