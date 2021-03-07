@@ -53,7 +53,7 @@ class cfpn3Head(nn.Module):
                             )
         self.gff = PAM_Module(in_dim=inter_channels, key_dim=inter_channels//8,value_dim=inter_channels,out_dim=inter_channels,norm_layer=norm_layer)
 
-        self.conv6 = nn.Sequential(nn.Dropout2d(0.1), nn.Conv2d(2*inter_channels, out_channels, 1))
+        self.conv6 = nn.Sequential(nn.Dropout2d(0.1), nn.Conv2d(inter_channels, out_channels, 1))
 
         self.localUp3=localUp(512, inter_channels, norm_layer, up_kwargs)
         self.localUp4=localUp(1024, inter_channels, norm_layer, up_kwargs)
@@ -92,14 +92,14 @@ class cfpn3Head(nn.Module):
         out = self.project(torch.cat([p2_1,p2_8,p3_1,p3_8,p4_1,p4_8], dim=1))
 
         #gp
-        gp = self.gap(out)    
+        # gp = self.gap(out)    
         # se
         # se = self.se(gp)
         
         # out = out + se*out
         # out = self.gff(out)
         #
-        out = torch.cat([out, gp.expand_as(out)], dim=1)
+        # out = torch.cat([out, gp.expand_as(out)], dim=1)
         return self.conv6(out)
 
 class Context(nn.Module):
