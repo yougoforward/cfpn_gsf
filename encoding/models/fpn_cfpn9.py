@@ -50,7 +50,7 @@ class fpn_cfpn9Head(nn.Module):
                             nn.Sigmoid())
         self.gff = PAM_Module(in_dim=inter_channels, key_dim=inter_channels//8,value_dim=inter_channels,out_dim=inter_channels,norm_layer=norm_layer)
 
-        self.conv6 = nn.Sequential(nn.Dropout2d(0.1), nn.Conv2d(inter_channels, out_channels, 1))
+        self.conv6 = nn.Sequential(nn.Dropout2d(0.1), nn.Conv2d(2*inter_channels, out_channels, 1))
 
         self.localUp3=localUp(512, inter_channels, norm_layer, up_kwargs)
         self.localUp4=localUp(1024, inter_channels, norm_layer, up_kwargs)
@@ -92,20 +92,20 @@ class fpn_cfpn9Head(nn.Module):
         out = self.project(torch.cat([p2_1,p3_1,p3_2,p3_4,p3_8,p4_1,p4_3,p4_6,p4_8], dim=1))
 
         #gp
-        # gp = self.gap(c4)    
+        gp = self.gap(c4)    
         # se
         # se = self.se(gp)
         
         # out = out + se*out
         # out = self.gff(out)
         #
-        # out = torch.cat([out, gp.expand_as(out)], dim=1)
+        out = torch.cat([out, gp.expand_as(out)], dim=1)
         return self.conv6(out)
 
 class Context4(nn.Module):
     def __init__(self, in_channels, width, out_channels, dilation_base, norm_layer):
         super(Context4, self).__init__()
-        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 1, padding=0, dilation=1, bias=False),
+        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=1, dilation=1, bias=False),
                                    norm_layer(width), nn.ReLU())
         self.dconv1 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=3, dilation=3, bias=False),
                                    norm_layer(width), nn.ReLU())
@@ -125,7 +125,7 @@ class Context4(nn.Module):
 class Context3(nn.Module):
     def __init__(self, in_channels, width, out_channels, dilation_base, norm_layer):
         super(Context3, self).__init__()
-        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 1, padding=0, dilation=1, bias=False),
+        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=1, dilation=1, bias=False),
                                    norm_layer(width), nn.ReLU())
         self.dconv1 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=2, dilation=2, bias=False),
                                    norm_layer(width), nn.ReLU())
@@ -145,7 +145,7 @@ class Context3(nn.Module):
 class Context2(nn.Module):
     def __init__(self, in_channels, width, out_channels, dilation_base, norm_layer):
         super(Context2, self).__init__()
-        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 1, padding=0, dilation=1, bias=False),
+        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=1, dilation=1, bias=False),
                                    norm_layer(width), nn.ReLU())
         # self.dconv1 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=4, dilation=4, bias=False),
         #                            norm_layer(width), nn.ReLU())
@@ -155,50 +155,50 @@ class Context2(nn.Module):
         # feat1 = self.dconv1(x)
         # cat = torch.cat([feat0, feat1], dim=1)  
         return feat0
-# class localUp(nn.Module):
-#     def __init__(self, in_channels, out_channels, norm_layer, up_kwargs):
-#         super(localUp, self).__init__()
-#         self.connect = nn.Sequential(nn.Conv2d(in_channels, out_channels//2, 1, padding=0, dilation=1, bias=False),
-#                                    norm_layer(out_channels//2),
-#                                    nn.ReLU())
-#         self.project = nn.Sequential(nn.Conv2d(out_channels, out_channels//2, 1, padding=0, dilation=1, bias=False),
-#                                    norm_layer(out_channels//2),
-#                                    nn.ReLU())
-
-#         self._up_kwargs = up_kwargs
-#         self.refine = nn.Sequential(nn.Conv2d(out_channels, out_channels//2, 3, padding=1, dilation=1, bias=False),
-#                                    norm_layer(out_channels//2),
-#                                    nn.ReLU(),
-#                                     )
-#         self.project2 = nn.Sequential(nn.Conv2d(out_channels//2, out_channels, 1, padding=0, dilation=1, bias=False),
-#                                    norm_layer(out_channels),
-#                                    )
-#         self.relu = nn.ReLU()
-#     def forward(self, c1,c2):
-#         n,c,h,w =c1.size()
-#         c1p = self.connect(c1) # n, 64, h, w
-#         c2 = F.interpolate(c2, (h,w), **self._up_kwargs)
-#         c2p = self.project(c2)
-#         out = torch.cat([c1p,c2p], dim=1)
-#         out = self.refine(out)
-#         out = self.project2(out)
-#         out = self.relu(c2+out)
-#         return out
 class localUp(nn.Module):
     def __init__(self, in_channels, out_channels, norm_layer, up_kwargs):
         super(localUp, self).__init__()
-        self.connect = nn.Sequential(nn.Conv2d(in_channels, out_channels, 1, padding=0, dilation=1, bias=False),
-                                   norm_layer(out_channels),
+        self.connect = nn.Sequential(nn.Conv2d(in_channels, out_channels//2, 1, padding=0, dilation=1, bias=False),
+                                   norm_layer(out_channels//2),
+                                   nn.ReLU())
+        self.project = nn.Sequential(nn.Conv2d(out_channels, out_channels//2, 1, padding=0, dilation=1, bias=False),
+                                   norm_layer(out_channels//2),
                                    nn.ReLU())
 
         self._up_kwargs = up_kwargs
-
+        self.refine = nn.Sequential(nn.Conv2d(out_channels, out_channels//2, 3, padding=1, dilation=1, bias=False),
+                                   norm_layer(out_channels//2),
+                                   nn.ReLU(),
+                                    )
+        self.project2 = nn.Sequential(nn.Conv2d(out_channels//2, out_channels, 1, padding=0, dilation=1, bias=False),
+                                   norm_layer(out_channels),
+                                   )
+        self.relu = nn.ReLU()
     def forward(self, c1,c2):
         n,c,h,w =c1.size()
         c1p = self.connect(c1) # n, 64, h, w
         c2 = F.interpolate(c2, (h,w), **self._up_kwargs)
-        out = c1p + c2
+        c2p = self.project(c2)
+        out = torch.cat([c1p,c2p], dim=1)
+        out = self.refine(out)
+        out = self.project2(out)
+        out = self.relu(c2+out)
         return out
+# class localUp(nn.Module):
+#     def __init__(self, in_channels, out_channels, norm_layer, up_kwargs):
+#         super(localUp, self).__init__()
+#         self.connect = nn.Sequential(nn.Conv2d(in_channels, out_channels, 1, padding=0, dilation=1, bias=False),
+#                                    norm_layer(out_channels),
+#                                    nn.ReLU())
+
+#         self._up_kwargs = up_kwargs
+
+#     def forward(self, c1,c2):
+#         n,c,h,w =c1.size()
+#         c1p = self.connect(c1) # n, 64, h, w
+#         c2 = F.interpolate(c2, (h,w), **self._up_kwargs)
+#         out = c1p + c2
+#         return out
 
 def get_fpn_cfpn9(dataset='pascal_voc', backbone='resnet50', pretrained=False,
                  root='~/.encoding/models', **kwargs):
