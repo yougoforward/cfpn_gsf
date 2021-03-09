@@ -105,7 +105,7 @@ class fpn_cfpn9Head(nn.Module):
 class Context4(nn.Module):
     def __init__(self, in_channels, width, out_channels, dilation_base, norm_layer):
         super(Context4, self).__init__()
-        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=1, dilation=1, bias=False),
+        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 1, padding=0, dilation=1, bias=False),
                                    norm_layer(width), nn.ReLU())
         self.dconv1 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=3, dilation=3, bias=False),
                                    norm_layer(width), nn.ReLU())
@@ -125,7 +125,7 @@ class Context4(nn.Module):
 class Context3(nn.Module):
     def __init__(self, in_channels, width, out_channels, dilation_base, norm_layer):
         super(Context3, self).__init__()
-        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=1, dilation=1, bias=False),
+        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 1, padding=0, dilation=1, bias=False),
                                    norm_layer(width), nn.ReLU())
         self.dconv1 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=2, dilation=2, bias=False),
                                    norm_layer(width), nn.ReLU())
@@ -145,7 +145,7 @@ class Context3(nn.Module):
 class Context2(nn.Module):
     def __init__(self, in_channels, width, out_channels, dilation_base, norm_layer):
         super(Context2, self).__init__()
-        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=1, dilation=1, bias=False),
+        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 1, padding=0, dilation=1, bias=False),
                                    norm_layer(width), nn.ReLU())
         # self.dconv1 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=4, dilation=4, bias=False),
         #                            norm_layer(width), nn.ReLU())

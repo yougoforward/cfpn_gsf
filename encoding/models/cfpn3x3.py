@@ -55,7 +55,7 @@ class cfpn3x3Head(nn.Module):
         self.localUp3=localUp(512, inter_channels, norm_layer, up_kwargs)
         self.localUp4=localUp(1024, inter_channels, norm_layer, up_kwargs)
 
-        self.context4 = Context(in_channels, inter_channels, inter_channels, 8, norm_layer)
+        self.context4 = Context3(in_channels, inter_channels, inter_channels, 8, norm_layer)
         self.project4 = nn.Sequential(nn.Conv2d(2*inter_channels, inter_channels, 1, padding=0, dilation=1, bias=False),
                                    norm_layer(inter_channels), nn.ReLU())
         self.context3 = Context(inter_channels, inter_channels, inter_channels, 8, norm_layer)
@@ -101,7 +101,7 @@ class cfpn3x3Head(nn.Module):
 class Context(nn.Module):
     def __init__(self, in_channels, width, out_channels, dilation_base, norm_layer):
         super(Context, self).__init__()
-        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=1, dilation=1, bias=False),
+        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 1, padding=0, dilation=1, bias=False),
                                    norm_layer(width), nn.ReLU())
         self.dconv1 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=dilation_base, dilation=dilation_base, bias=False),
                                    norm_layer(width), nn.ReLU())
@@ -112,6 +112,20 @@ class Context(nn.Module):
         cat = torch.cat([feat0, feat1], dim=1)  
         return cat, feat0, feat1
 
+class Context3(nn.Module):
+    def __init__(self, in_channels, width, out_channels, dilation_base, norm_layer):
+        super(Context3, self).__init__()
+        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=1, dilation=1, bias=False),
+                                   norm_layer(width), nn.ReLU())
+        self.dconv1 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=dilation_base, dilation=dilation_base, bias=False),
+                                   norm_layer(width), nn.ReLU())
+
+    def forward(self, x):
+        feat0 = self.dconv0(x)
+        feat1 = self.dconv1(x)
+        cat = torch.cat([feat0, feat1], dim=1)  
+        return cat, feat0, feat1
+    
 class localUp(nn.Module):
     def __init__(self, in_channels, out_channels, norm_layer, up_kwargs):
         super(localUp, self).__init__()
