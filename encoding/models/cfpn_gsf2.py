@@ -55,7 +55,7 @@ class cfpn_gsf2Head(nn.Module):
         self.localUp3=localUp(512, inter_channels, norm_layer, up_kwargs)
         self.localUp4=localUp(1024, inter_channels, norm_layer, up_kwargs)
 
-        self.context4 = Context(in_channels, inter_channels, inter_channels, 8, norm_layer)
+        self.context4 = Context(inter_channels, inter_channels, inter_channels, 8, norm_layer)
         self.project4 = nn.Sequential(nn.Conv2d(2*inter_channels, inter_channels, 1, padding=0, dilation=1, bias=False),
                                    norm_layer(inter_channels), nn.ReLU())
         self.context3 = Context(inter_channels, inter_channels, inter_channels, 8, norm_layer)
@@ -68,10 +68,26 @@ class cfpn_gsf2Head(nn.Module):
                                    nn.ReLU(),
                                    )
         
+        self.conv5 = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, dilation=1, bias=False),
+                                   norm_layer(inter_channels),
+                                   nn.ReLU(),
+                                   )
+        self.gap1 = nn.Sequential(nn.AdaptiveAvgPool2d(1),
+                            nn.Conv2d(in_channels, inter_channels, 1, bias=False),
+                            norm_layer(inter_channels),
+                            nn.ReLU(True))
+        self.project_gp = nn.Sequential(nn.Conv2d(2*inter_channels, inter_channels, 1, padding=0, dilation=1, bias=False),
+                                   norm_layer(inter_channels),
+                                   nn.ReLU(),
+                                   )
+        
         
     def forward(self, c1,c2,c3,c4):
         _,_, h,w = c2.size()
-        cat4, p4_1, p4_8=self.context4(c4)
+        out5 = self.conv5(c4)
+        gp1 = self.gap1(c4)
+        out4 = self.project_gp(torch.cat([out5, gp1.expand_as(out5)], dim=1))
+        cat4, p4_1, p4_8=self.context4(out4)
         p4 = self.project4(cat4)
                 
         out3 = self.localUp4(c3, p4)
@@ -93,7 +109,7 @@ class cfpn_gsf2Head(nn.Module):
         # se = self.se(gp)
         
         # out = out + se*out
-        # out = self.gff(out)
+        out = self.gff(out)
         #
         out = torch.cat([out, gp.expand_as(out)], dim=1)
         return self.conv6(out)
@@ -101,7 +117,7 @@ class cfpn_gsf2Head(nn.Module):
 class Context(nn.Module):
     def __init__(self, in_channels, width, out_channels, dilation_base, norm_layer):
         super(Context, self).__init__()
-        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=1, dilation=1, bias=False),
+        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 1, padding=0, dilation=1, bias=False),
                                    norm_layer(width), nn.ReLU())
         self.dconv1 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=dilation_base, dilation=dilation_base, bias=False),
                                    norm_layer(width), nn.ReLU())
