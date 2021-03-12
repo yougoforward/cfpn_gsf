@@ -55,28 +55,15 @@ class cfpn_gsf2Head(nn.Module):
         self.localUp3=localUp(512, inter_channels, norm_layer, up_kwargs)
         self.localUp4=localUp(1024, inter_channels, norm_layer, up_kwargs)
 
-        self.context4 = Context(inter_channels, inter_channels, inter_channels, 8, norm_layer)
-        self.project4 = nn.Sequential(nn.Conv2d(2*inter_channels, inter_channels, 1, padding=0, dilation=1, bias=False),
+        self.context4 = Context2(in_channels, inter_channels, inter_channels, 8, norm_layer)
+        self.project4 = nn.Sequential(nn.Conv2d(3*inter_channels, inter_channels, 1, padding=0, dilation=1, bias=False),
                                    norm_layer(inter_channels), nn.ReLU())
         self.context3 = Context(inter_channels, inter_channels, inter_channels, 8, norm_layer)
         self.project3 = nn.Sequential(nn.Conv2d(2*inter_channels, inter_channels, 1, padding=0, dilation=1, bias=False),
                                    norm_layer(inter_channels), nn.ReLU())
         self.context2 = Context(inter_channels, inter_channels, inter_channels, 8, norm_layer)
 
-        self.project = nn.Sequential(nn.Conv2d(6*inter_channels, inter_channels, 1, padding=0, dilation=1, bias=False),
-                                   norm_layer(inter_channels),
-                                   nn.ReLU(),
-                                   )
-        
-        self.conv5 = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, dilation=1, bias=False),
-                                   norm_layer(inter_channels),
-                                   nn.ReLU(),
-                                   )
-        self.gap1 = nn.Sequential(nn.AdaptiveAvgPool2d(1),
-                            nn.Conv2d(in_channels, inter_channels, 1, bias=False),
-                            norm_layer(inter_channels),
-                            nn.ReLU(True))
-        self.project_gp = nn.Sequential(nn.Conv2d(2*inter_channels, inter_channels, 1, padding=0, dilation=1, bias=False),
+        self.project = nn.Sequential(nn.Conv2d(7*inter_channels, inter_channels, 1, padding=0, dilation=1, bias=False),
                                    norm_layer(inter_channels),
                                    nn.ReLU(),
                                    )
@@ -84,10 +71,7 @@ class cfpn_gsf2Head(nn.Module):
         
     def forward(self, c1,c2,c3,c4):
         _,_, h,w = c2.size()
-        out5 = self.conv5(c4)
-        gp1 = self.gap1(c4)
-        out4 = self.project_gp(torch.cat([out5, gp1.expand_as(out5)], dim=1))
-        cat4, p4_1, p4_8=self.context4(out4)
+        cat4, p4_1, p4_8, pgc=self.context4(c4)
         p4 = self.project4(cat4)
                 
         out3 = self.localUp4(c3, p4)
@@ -97,11 +81,12 @@ class cfpn_gsf2Head(nn.Module):
         out2 = self.localUp3(c2, p3)
         cat2, p2_1, p2_8=self.context2(out2)
         
+        pgc = F.interpolate(pgc, (h,w), **self._up_kwargs)
         p4_1 = F.interpolate(p4_1, (h,w), **self._up_kwargs)
         p4_8 = F.interpolate(p4_8, (h,w), **self._up_kwargs)
         p3_1 = F.interpolate(p3_1, (h,w), **self._up_kwargs)
         p3_8 = F.interpolate(p3_8, (h,w), **self._up_kwargs)
-        out = self.project(torch.cat([p2_1,p2_8,p3_1,p3_8,p4_1,p4_8], dim=1))
+        out = self.project(torch.cat([p2_1,p2_8,p3_1,p3_8,p4_1,p4_8,pgc], dim=1))
 
         #gp
         gp = self.gap(c4)    
@@ -128,6 +113,36 @@ class Context(nn.Module):
         cat = torch.cat([feat0, feat1], dim=1)  
         return cat, feat0, feat1
 
+class Context2(nn.Module):
+    def __init__(self, in_channels, width, out_channels, dilation_base, norm_layer):
+        super(Context, self).__init__()
+        self.dconv0 = nn.Sequential(nn.Conv2d(in_channels, width, 1, padding=0, dilation=1, bias=False),
+                                   norm_layer(width), nn.ReLU())
+        self.dconv1 = nn.Sequential(nn.Conv2d(in_channels, width, 3, padding=dilation_base, dilation=dilation_base, bias=False),
+                                   norm_layer(width), nn.ReLU())
+        
+        self.pgc = pgc(in_channels, width, norm_layer)
+
+    def forward(self, x):
+        feat0 = self.dconv0(x)
+        feat1 = self.dconv1(x)
+        pgc = self.pgc(x)
+        cat = torch.cat([feat0, feat1, pgc], dim=1)  
+        return cat, feat0, feat1, pgc
+class pgc(nn.Module):
+    def __init__(self, in_channels, out_channels, norm_layer):
+        super(pgc, self).__init__()
+        self.conv0 = nn.Sequential(nn.Conv2d(in_channels, out_channels, 1, padding=0, dilation=1, bias=False),
+                                   norm_layer(out_channels), nn.ReLU())
+
+    def forward(self, x):
+        n,c,h,w = x.size()
+        hgp = F.adaptive_avg_pool2d(x, (h,1))
+        wgp = F.adaptive_avg_pool2d(x, (1,w))
+        pgp = (hgp*w+wgp*h-x)/(h+w-1)
+        out = self.conv0(pgp)
+        return out
+    
 class localUp(nn.Module):
     def __init__(self, in_channels, out_channels, norm_layer, up_kwargs):
         super(localUp, self).__init__()
