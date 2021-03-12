@@ -51,7 +51,7 @@ class fpn_asppHead(nn.Module):
         self.localUp4=localUp(1024, in_channels, norm_layer, up_kwargs)
         self.aspp = ASPP_Module(inter_channels, 256, inter_channels, atrous_rates, norm_layer, up_kwargs)
 
-    def forward(self, c0,c1,c2,c3,c4):
+    def forward(self, c1,c2,c3,c4):
         _,_, h,w = c2.size()
                
         out = self.conv5(c4)
