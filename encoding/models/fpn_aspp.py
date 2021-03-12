@@ -20,8 +20,8 @@ class fpn_aspp(BaseNet):
 
     def forward(self, x):
         imsize = x.size()[2:]
-        c0, c1, c2, c3, c4 = self.base_forward(x)
-        x = self.head(c0,c1,c2,c3,c4)
+        c1, c2, c3, c4 = self.base_forward(x)
+        x = self.head(c1,c2,c3,c4)
         x = F.interpolate(x, imsize, **self._up_kwargs)
         outputs = [x]
         if self.aux:
