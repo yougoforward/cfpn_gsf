@@ -47,8 +47,8 @@ class fpn_cat3x3_asppHead(nn.Module):
 
         self.conv6 = nn.Sequential(nn.Dropout2d(0.1), nn.Conv2d(inter_channels, out_channels, 1))
 
-        self.localUp3=localUp(512, in_channels, norm_layer, up_kwargs)
-        self.localUp4=localUp(1024, in_channels, norm_layer, up_kwargs)
+        self.localUp3=localUp(512, inter_channels, norm_layer, up_kwargs)
+        self.localUp4=localUp(1024, inter_channels, norm_layer, up_kwargs)
         self.aspp = ASPP_Module(inter_channels, 256, inter_channels, atrous_rates, norm_layer, up_kwargs)
 
     def forward(self, c1,c2,c3,c4):
