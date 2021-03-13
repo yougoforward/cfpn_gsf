@@ -58,7 +58,7 @@ class fpn_cat3x3_asppHead(nn.Module):
                
         out3 = self.localUp4(c3, out)  
         out = self.localUp3(c2, out3)
-        out = self.aspp(out)
+        # out = self.aspp(out)
         
         return self.conv6(out)
 class localUp(nn.Module):
