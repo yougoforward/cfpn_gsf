@@ -123,11 +123,11 @@ class localUp(nn.Module):
                                    nn.ReLU())
 
         self._up_kwargs = up_kwargs
-        self.refine = nn.Sequential(nn.Conv2d(out_channels, out_channels//2, 3, padding=1, dilation=1, bias=False),
-                                   norm_layer(out_channels//2),
+        self.refine = nn.Sequential(nn.Conv2d(out_channels, out_channels//4, 3, padding=1, dilation=1, bias=False),
+                                   norm_layer(out_channels//4),
                                    nn.ReLU(),
                                     )
-        self.project2 = nn.Sequential(nn.Conv2d(out_channels//2, out_channels, 1, padding=0, dilation=1, bias=False),
+        self.project2 = nn.Sequential(nn.Conv2d(out_channels//4, out_channels, 1, padding=0, dilation=1, bias=False),
                                    norm_layer(out_channels),
                                    )
         self.relu = nn.ReLU()
