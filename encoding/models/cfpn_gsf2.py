@@ -122,7 +122,7 @@ class Context2(nn.Module):
                                    norm_layer(width), nn.ReLU())
         
         self.pgc = pgc(in_channels, width, norm_layer)
-        self.pgc2 = pgc(in_channels, width, norm_layer)
+        self.pgc2 = pgc(width, width, norm_layer)
 
     def forward(self, x):
         feat0 = self.dconv0(x)
