@@ -122,11 +122,13 @@ class Context2(nn.Module):
                                    norm_layer(width), nn.ReLU())
         
         self.pgc = pgc(in_channels, width, norm_layer)
+        self.pgc2 = pgc(in_channels, width, norm_layer)
 
     def forward(self, x):
         feat0 = self.dconv0(x)
         feat1 = self.dconv1(x)
         pgc = self.pgc(x)
+        pgc = self.pgc2(pgc)
         cat = torch.cat([feat0, feat1, pgc], dim=1)  
         return cat, feat0, feat1, pgc
 class pgc(nn.Module):
