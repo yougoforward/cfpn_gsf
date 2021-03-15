@@ -46,8 +46,8 @@ class fpn_pamHead(nn.Module):
                                    )
         self.conv6 = nn.Sequential(nn.Dropout2d(0.1), nn.Conv2d(inter_channels, out_channels, 1))
         
-        self.localUp3=localUp(512, in_channels, norm_layer, up_kwargs)
-        self.localUp4=localUp(1024, in_channels, norm_layer, up_kwargs)
+        self.localUp3=localUp(512, inter_channels, norm_layer, up_kwargs)
+        self.localUp4=localUp(1024, inter_channels, norm_layer, up_kwargs)
         self.pam = ori_PAM_Module(in_dim=inter_channels, key_dim=inter_channels//8,value_dim=inter_channels,out_dim=inter_channels,norm_layer=norm_layer)
 
     def forward(self, c1,c2,c3,c4):
