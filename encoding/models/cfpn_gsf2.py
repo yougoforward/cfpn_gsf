@@ -144,7 +144,26 @@ class pgc(nn.Module):
         pgp = (hgp*w+wgp*h-x)/(h+w-1)
         out = self.conv0(pgp)
         return out
-    
+class pgc2(nn.Module):
+    def __init__(self, in_channels, out_channels, norm_layer):
+        super(pgc2, self).__init__()
+        self.conv_h = nn.Sequential(nn.Conv2d(in_channels, out_channels, 1, padding=0, dilation=1, bias=False),
+                                   norm_layer(out_channels), nn.ReLU())
+        self.conv_w = nn.Sequential(nn.Conv2d(in_channels, out_channels, 1, padding=0, dilation=1, bias=False),
+                                   norm_layer(out_channels), nn.ReLU())
+        self.conv0 = nn.Sequential(nn.Conv2d(out_channels, out_channels, 1, padding=0, dilation=1, bias=False),
+                                   norm_layer(out_channels), nn.ReLU())
+
+    def forward(self, x):
+        n,c,h,w = x.size()
+        hgp = F.adaptive_avg_pool2d(x, (h,1))
+        hgp = self.conv_h(hgp)
+        wgp = F.adaptive_avg_pool2d(x, (1,w))
+        wgp = self.conv_w(wgp)
+        # pgp = (hgp*w+wgp*h-x)/(h+w-1)
+        pgp = hgp + wgp
+        out = self.conv0(pgp)
+        return out    
 class localUp(nn.Module):
     def __init__(self, in_channels, out_channels, norm_layer, up_kwargs):
         super(localUp, self).__init__()
