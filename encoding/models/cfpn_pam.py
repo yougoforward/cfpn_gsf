@@ -232,4 +232,5 @@ class ori_PAM_Module(nn.Module):
         out = out.view(m_batchsize, C, height, width)
 
         # out = self.gamma*out + x
+        out = out+x
         return out
