@@ -20,8 +20,8 @@ class fpn_cat3x3_aspp(BaseNet):
 
     def forward(self, x):
         imsize = x.size()[2:]
-        c0, c1, c2, c3, c4 = self.base_forward(x)
-        x = self.head(c0,c1,c2,c3,c4)
+        c1, c2, c3, c4 = self.base_forward(x)
+        x = self.head(c1,c2,c3,c4)
         x = F.interpolate(x, imsize, **self._up_kwargs)
         outputs = [x]
         if self.aux:
@@ -47,18 +47,18 @@ class fpn_cat3x3_asppHead(nn.Module):
 
         self.conv6 = nn.Sequential(nn.Dropout2d(0.1), nn.Conv2d(inter_channels, out_channels, 1))
 
-        self.localUp3=localUp(512, in_channels, norm_layer, up_kwargs)
-        self.localUp4=localUp(1024, in_channels, norm_layer, up_kwargs)
+        self.localUp3=localUp(512, inter_channels, norm_layer, up_kwargs)
+        self.localUp4=localUp(1024, inter_channels, norm_layer, up_kwargs)
         self.aspp = ASPP_Module(inter_channels, 256, inter_channels, atrous_rates, norm_layer, up_kwargs)
 
-    def forward(self, c0,c1,c2,c3,c4):
+    def forward(self, c1,c2,c3,c4):
         _,_, h,w = c2.size()
                
         out = self.conv5(c4)
                
         out3 = self.localUp4(c3, out)  
         out = self.localUp3(c2, out3)
-        out = self.aspp(out)
+        # out = self.aspp(out)
         
         return self.conv6(out)
 class localUp(nn.Module):

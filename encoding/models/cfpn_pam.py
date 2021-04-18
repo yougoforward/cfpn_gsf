@@ -206,6 +206,11 @@ class ori_PAM_Module(nn.Module):
         self.key_conv = nn.Conv2d(in_channels=in_dim, out_channels=key_dim, kernel_size=1)
         self.value_conv = nn.Conv2d(in_channels=in_dim, out_channels=in_dim, kernel_size=1)
         self.gamma = nn.Parameter(torch.zeros(1))
+        
+        # self.value_conv = nn.Sequential(nn.Conv2d(in_dim, value_dim, 1, padding=0, dilation=1, bias=False),
+        #                            norm_layer(value_dim),
+        #                            nn.ReLU(),
+        #                             )
 
         self.softmax = nn.Softmax(dim=-1)
     def forward(self, x):
@@ -226,5 +231,6 @@ class ori_PAM_Module(nn.Module):
         out = torch.bmm(proj_value, attention.permute(0, 2, 1))
         out = out.view(m_batchsize, C, height, width)
 
-        out = self.gamma*out + x
+        # out = self.gamma*out + x
+        out = out+x
         return out
